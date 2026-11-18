@@ -65,6 +65,23 @@ CREATE TABLE IF NOT EXISTS gap_reports (
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
+CREATE TABLE IF NOT EXISTS void_snapshots (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  batch_id INTEGER NOT NULL,
+  run_code TEXT NOT NULL,
+  table_name TEXT NOT NULL,
+  watermark_snapshot TEXT NOT NULL,
+  stamped_at TEXT,
+  operator TEXT,
+  cleared INTEGER NOT NULL DEFAULT 1,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_void_snapshots_batch
+  ON void_snapshots(batch_id);
+CREATE INDEX IF NOT EXISTS idx_void_snapshots_watermark
+  ON void_snapshots(watermark_snapshot);
+
 CREATE TABLE IF NOT EXISTS meta (
   key TEXT PRIMARY KEY,
   value TEXT NOT NULL

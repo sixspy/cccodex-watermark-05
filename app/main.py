@@ -11,9 +11,11 @@ from app.services import (
     list_batches,
     list_reports,
     list_templates,
+    list_void_snapshots,
     run_gap_report,
     stamp_batch,
     trace_downstream,
+    void_batch,
 )
 from app.services.errors import ServiceError
 
@@ -159,7 +161,9 @@ async def api_batch_detail(request: Request):
     batch = get_batch(batch_id)
     if not batch:
         return json_response({"error": "批次不存在"}, 404)
-    return json_response({"batch": batch})
+    snapshots = list_void_snapshots(batch_id=batch_id)
+    batch["ever_voided"] = bool(snapshots)
+    return json_response({"batch": batch, "void_snapshots": snapshots})
 
 
 @app.router.post("/api/batches/{batch_id}/stamp")
@@ -172,6 +176,33 @@ async def api_stamp(request: Request):
     except ServiceError as exc:
         return json_response({"ok": False, "error": exc.message}, exc.status_code)
     return json_response({"ok": True, "batch": batch})
+
+
+@app.router.post("/api/batches/{batch_id}/void")
+async def api_void(request: Request):
+    try:
+        user = require_user(request)
+        batch_id = int(request.route_values["batch_id"])
+        # 服务端按唯一读法一次改库：清空水印与改态在同一事务完成。
+        batch = void_batch(batch_id, operator=user)
+        snapshots = list_void_snapshots(batch_id=batch_id)
+    except ServiceError as exc:
+        # 出错一律回中文信息，不抛裸异常给前端。
+        return json_response({"ok": False, "error": exc.message}, exc.status_code)
+    return json_response(
+        {"ok": True, "batch": batch, "void_snapshots": snapshots}
+    )
+
+
+@app.router.get("/api/void-snapshots")
+async def api_void_snapshots(request: Request):
+    try:
+        require_user(request)
+    except ServiceError as exc:
+        return json_response({"error": exc.message}, exc.status_code)
+    batch_param = request.query.get("batch_id")
+    batch_id = int(batch_param[0]) if batch_param else None
+    return json_response({"items": list_void_snapshots(batch_id=batch_id)})
 
 
 @app.router.post("/api/trace")

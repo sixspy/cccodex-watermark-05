@@ -91,6 +91,25 @@ th { color: var(--muted); font-weight: 500; }
   background: #e7f5c8;
   font-size: 0.75rem;
 }
+.chip-void {
+  margin-left: 0.35rem;
+  background: #fde2dd;
+  color: var(--danger);
+}
+.chip-cleared {
+  background: #d8efe4;
+  color: #1d6f4c;
+}
+.chip-snapshot {
+  background: #eef0f2;
+  color: #44505a;
+}
+button.danger {
+  background: var(--danger);
+  color: #fff;
+}
+.void-detail h3, .trace-void h3 { margin-bottom: 0.5rem; }
+.trace-void { border-color: var(--danger); }
 .muted { color: var(--muted); }
 .row { display: flex; gap: 0.5rem; flex-wrap: wrap; margin: 0.7rem 0; }
 .cardish {
